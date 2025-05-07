@@ -54,6 +54,7 @@ def calculate_mean_square(
               per channel.
 
     Raises:
+        ValueError: If the input signal is empty.
         ValueError: If the input signal is neither a 1D nor a 2D array.
 
     Example:
@@ -66,6 +67,9 @@ def calculate_mean_square(
         >>> calculate_mean_square(multi_channel_signal)
         array([1.0, 4.0])
     """
+
+    if signal.size == 0:
+        raise ValueError("Input signal is empty.")
 
     if signal.ndim not in [1, 2]:
         raise ValueError(
