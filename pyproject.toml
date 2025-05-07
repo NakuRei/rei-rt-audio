@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=78.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rei-rt-audio"
+version = "0.1.0"
+description = "A library for real-time audio processing using sounddevice"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {file = "LICENSE"}
+authors = [
+    {name = "NakuRei", email = "nakurei7901@gmail.com"},
+]
+keywords = ["audio", "sounddevice", "real-time", "processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=2.2",
+    "sounddevice>=0.5.1",
+    "scipy>=1.15",
+    "matplotlib>=3.10",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/NakuRei/rei-rt-audio"
+"Bug Tracker" = "https://github.com/NakuRei/rei-rt-audio/issues"
+"Source Code" = "https://github.com/NakuRei/rei-rt-audio"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["rei_rt_audio"]
+
+[tool.setuptools.package-data]
+"rei_rt_audio" = ["py.typed"]
