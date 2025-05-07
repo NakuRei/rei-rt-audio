@@ -1,3 +1,4 @@
+import traceback
 from typing import Any, Final, Sequence
 
 import numpy as np
@@ -28,7 +29,9 @@ class InOutStreamDispatcher(my_consumer.Consumer):
             try:
                 pub.publish(data=np.copy(data))
             except Exception as e:
-                self._logger.error(f"Error in publisher: {e}")
+                self._logger.error(
+                    f"Error in publisher: {e}\n{traceback.format_exc()}"
+                )
 
     def __repr__(self):
         return (
