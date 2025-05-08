@@ -1,4 +1,5 @@
 import math
+from typing import Any
 
 import pytest
 
@@ -9,14 +10,14 @@ from rei_rt_audio.calculate import gain_db_to_linear
     "gain_db, expected",
     [
         (0, 1.0),  # 0dB -> 1.0
-        (6, 10 ** (6 / 20)),  # 正の値
-        (-6, 10 ** (-6 / 20)),  # 負の値
-        (0.333, 10 ** (0.333 / 20)),  # 正の小数点以下の値
-        (-0.333, 10 ** (-0.333 / 20)),  # 負の小数点以下の値
+        (6, 10 ** (6 / 20)),  # Positive value
+        (-6, 10 ** (-6 / 20)),  # Negative value
+        (0.333, 10 ** (0.333 / 20)),  # Positive fractional value
+        (-0.333, 10 ** (-0.333 / 20)),  # Negative fractional value
         (20, 10.0),  # 20dB -> 10.0
         (-20, 0.1),  # -20dB -> 0.1
-        (100, 10 ** (100 / 20)),  # 非常に大きい値
-        (-100, 10 ** (-100 / 20)),  # 非常に小さい値
+        (100, 10 ** (100 / 20)),  # Very large value
+        (-100, 10 ** (-100 / 20)),  # Very small value
     ],
 )
 def test_gain_db_to_linear_basic(gain_db: float, expected: float):
@@ -25,16 +26,23 @@ def test_gain_db_to_linear_basic(gain_db: float, expected: float):
 
 
 def test_gain_db_to_linear_inf():
-    # 正の無限大 -> 無限大
-    result = gain_db_to_linear(float("inf"))
-    assert result == float("inf")
+    # Positive infinity -> infinity
+    assert gain_db_to_linear(float("inf")) == float("inf")
 
-    # 負の無限大 -> 0.0
-    result = gain_db_to_linear(float("-inf"))
-    assert result == 0.0
+    # Negative infinity -> 0.0 (by mathematical definition: 10 ** -inf == 0.0)
+    assert gain_db_to_linear(float("-inf")) == 0.0
 
 
 def test_gain_db_to_linear_nan():
-    # NaN -> NaN (仕様によってはエラーでも良い)
+    # NaN -> NaN
     result = gain_db_to_linear(float("nan"))
     assert math.isnan(result)
+
+
+@pytest.mark.parametrize(
+    "invalid_input",
+    ["a", None, [], {}, object()],
+)
+def test_gain_db_to_linear_invalid_type(invalid_input: Any):
+    with pytest.raises(TypeError):
+        gain_db_to_linear(invalid_input)
