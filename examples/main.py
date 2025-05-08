@@ -66,7 +66,6 @@ class GuiApp(rei_rt_audio.callback.InOutStreamCallbackHandler):
                     time,
                 )
             )
-
         self._gain_processor.process(
             in_data=in_data,
             out_data=out_data,
@@ -89,7 +88,7 @@ class GuiApp(rei_rt_audio.callback.InOutStreamCallbackHandler):
 if __name__ == "__main__":
     # Define parameters for the stream.
 
-    in_device = "VoiceMeeter Output (VB-Audio Vo, MME"
+    in_device = "Line (2- Yamaha AG06MK2), MME"
     out_device = "VoiceMeeter Aux Input (VB-Audio, MME"
     device_sample_rate = 48000
     device_blocksize = 1024
@@ -100,7 +99,6 @@ if __name__ == "__main__":
     process_seconds = 1.5
 
     logger = rei_rt_audio.logger.PrintLogger(rei_rt_audio.logger.LogLevel.INFO)
-
     subscribers = [
         rei_rt_audio.subscriber.QueueThreadSubscriber(
             strategy=rei_rt_audio.strategy.AccumulatingBufferProcessingStrategy(
@@ -110,7 +108,7 @@ if __name__ == "__main__":
             ),
             queue_max_size=device_blocksize * 2,
             logger=logger,
-            name="For Max Amp Process",
+            name="For Max Amp Thread",
         ),
         rei_rt_audio.subscriber.QueueProcessSubscriber(
             strategy=rei_rt_audio.strategy.AccumulatingBufferProcessingStrategy(
@@ -121,6 +119,32 @@ if __name__ == "__main__":
             queue_max_size=device_blocksize * 2,
             logger=logger,
             name="For RMS Process",
+        ),
+        rei_rt_audio.subscriber.QueueThreadSubscriber(
+            strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
+                consumer=rei_rt_audio.plotter.RmsDbfsPlotter(
+                    max_points=256,
+                    channel_numbers=[1, 2],
+                    logger=logger,
+                ),
+                logger=logger,
+            ),
+            queue_max_size=device_blocksize * 2,
+            logger=logger,
+            name="For RMS Plot Thread",
+        ),
+        rei_rt_audio.subscriber.QueueThreadSubscriber(
+            strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
+                consumer=rei_rt_audio.plotter.WaveformPlotter(
+                    max_points=int(device_sample_rate * process_seconds),
+                    channel_numbers=[1, 2],
+                    logger=logger,
+                ),
+                logger=logger,
+            ),
+            queue_max_size=device_blocksize * 2,
+            logger=logger,
+            name="For Waveform Plot Thread",
         ),
     ]
     publisher = rei_rt_audio.publisher.FramePublisher(
