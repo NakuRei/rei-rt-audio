@@ -1,4 +1,5 @@
 {
   "typeCheckingMode": "strict",
-  "reportMissingTypeStubs": false
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false
 }
