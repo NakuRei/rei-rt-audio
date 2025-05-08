@@ -74,7 +74,7 @@ def calculate_mean_square(
     if signal.ndim not in [1, 2]:
         raise ValueError(
             f"Invalid signal shape: {signal.shape}. "
-            "Signal must be 1D or 2D array."
+            "Input signal must be 1D or 2D numpy array."
         )
 
     return np.mean(np.square(signal), axis=0)
@@ -113,12 +113,6 @@ def calculate_rms(
         >>> calculate_rms(multi_channel_signal)
         array([1.0, 2.0])
     """
-
-    if signal.ndim not in [1, 2]:
-        raise ValueError(
-            f"Invalid signal shape: {signal.shape}. "
-            "Signal must be 1D or 2D array."
-        )
 
     return np.sqrt(calculate_mean_square(signal))
 
@@ -162,11 +156,7 @@ def calculate_rms_dbfs(
         >>> calculate_rms_dbfs(multi_channel_signal)
         array([ 0., -6.02059991])
     """
-    if signal.ndim not in [1, 2]:
-        raise ValueError(
-            f"Invalid signal shape: {signal.shape}. "
-            "Signal must be 1D or 2D array."
-        )
+
     rms = calculate_rms(signal)
     return 20 * np.log10(np.maximum(rms / full_scale, eps))
 
@@ -210,7 +200,17 @@ def calculate_peak_dbfs(
         >>> calculate_peak_dbfs(multi_channel_signal)
         array([ 0., -6.02059991])
     """
-    peak = np.max(np.abs(signal))
+
+    if signal.size == 0:
+        raise ValueError("Input signal is empty.")
+
+    if signal.ndim not in [1, 2]:
+        raise ValueError(
+            f"Invalid signal shape: {signal.shape}. "
+            "Input signal must be 1D or 2D numpy array."
+        )
+
+    peak = np.max(np.abs(signal), axis=0)
     return 20 * np.log10(np.maximum(peak / full_scale, eps))
 
 
