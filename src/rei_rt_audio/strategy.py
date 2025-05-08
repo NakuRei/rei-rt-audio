@@ -37,7 +37,7 @@ class FrameHandlingStrategy(abc.ABC):
 
         if preprocess_for_frame is None:
             preprocess_for_frame = self.default_preprocess
-        self._preprocess_for_frame: Final = preprocess_for_frame
+        self.preprocess_for_frame = preprocess_for_frame
 
     @abc.abstractmethod
     def handle(self, frame: npt.NDArray[Any]) -> None:
@@ -59,7 +59,7 @@ class FrameHandlingStrategy(abc.ABC):
 
 class FrameProcessingStrategy(FrameHandlingStrategy):
     def handle(self, frame: npt.NDArray[Any]) -> None:
-        data = self._preprocess_for_frame(frame)
+        data = self.preprocess_for_frame(frame)
         if data is None:
             return
 
@@ -112,7 +112,7 @@ class SlidingBufferProcessingStrategy(FrameHandlingStrategy):
         )
 
     def handle(self, frame: npt.NDArray[Any]) -> None:
-        data = self._preprocess_for_frame(frame)
+        data = self.preprocess_for_frame(frame)
         if data is None:
             return
 
@@ -149,7 +149,7 @@ class SlidingBufferProcessingStrategy(FrameHandlingStrategy):
             f"n_buffer_samples={self._n_buffer_samples}, "
             f"consumer={repr(self._consumer)}, "
             f"logger={repr(self._logger)}, "
-            f"preprocess_for_frame={repr(self._preprocess_for_frame)})"
+            f"preprocess_for_frame={repr(self.preprocess_for_frame)})"
         )
 
     def __str__(self):
@@ -185,7 +185,7 @@ class AccumulatingBufferProcessingStrategy(FrameHandlingStrategy):
         self._name = self.__class__.__name__
 
     def handle(self, frame: npt.NDArray[Any]) -> None:
-        data = self._preprocess_for_frame(frame)
+        data = self.preprocess_for_frame(frame)
         if data is None:
             return
 
@@ -222,7 +222,7 @@ class AccumulatingBufferProcessingStrategy(FrameHandlingStrategy):
             f"n_buffer_samples={self._n_buffer_samples}, "
             f"consumer={repr(self._consumer)}, "
             f"logger={repr(self._logger)}, "
-            f"preprocess_for_frame={repr(self._preprocess_for_frame)})"
+            f"preprocess_for_frame={repr(self.preprocess_for_frame)})"
         )
 
     def __str__(self):
