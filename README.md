@@ -33,7 +33,6 @@ pip install -e .
 pip install -r requirements_test.txt
 ```
 
-
 テストは`pytest`で実行できる。
 
 ```sh
@@ -51,6 +50,22 @@ pytest --cov=src
 ```sh
 coverage lcov -o lcov.info
 ```
+
+## Document
+
+ドキュメント生成に必要なパッケージは別途`requirements_docs.txt`に書いている。ローカルでドキュメントを生成する場合はインストールする。
+
+```sh
+pip install -r requirements_docstxt
+```
+
+Windowsの場合、ドキュメントは下記コマンドで生成できる。
+
+```cmd
+del docs\source\modules\*.rst && docs\make.bat html
+```
+
+生成された`docs/build/html/index.html`を開く。
 
 ## Author
 

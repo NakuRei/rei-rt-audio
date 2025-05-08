@@ -1,4 +1,5 @@
 import abc
+import traceback
 from typing import Any, Final, Protocol, Sequence
 
 import numpy as np
@@ -131,5 +132,6 @@ class FramePublisher(Publisher):
                 sub.update(np.copy(data))
             except Exception as e:
                 self._logger.error(
-                    f"Error in subscriber {type(sub).__name__}: {e}"
+                    f"Error in subscriber {type(sub).__name__}: {e}\n"
+                    f"{traceback.format_exc()}"
                 )

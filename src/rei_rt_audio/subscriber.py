@@ -140,8 +140,8 @@ class SyncSubscriber(Subscriber):
             self._strategy.handle(data)
         except Exception as e:
             self._logger.error(
-                f"{self._name} (update): process error: "
-                f"{e}\n{traceback.format_exc()}"
+                f"{self._name} (update): process error: {e}\n"
+                f"{traceback.format_exc()}"
             )
             # Exit the thread with a non-zero status
             sys.exit(1)
@@ -290,8 +290,8 @@ class SlidingBufferThreadSubscriber(Subscriber):
                 self._new_data_event.set()
         except Exception as e:
             self._logger.error(
-                f"{self._name} (update): process error: "
-                f"{e}\n{traceback.format_exc()}"
+                f"{self._name} (update): process error: {e}\n"
+                f"{traceback.format_exc()}"
             )
 
     def start(self) -> None:
@@ -337,8 +337,8 @@ class SlidingBufferThreadSubscriber(Subscriber):
 
             except Exception as e:
                 self._logger.error(
-                    f"{self._name} (_run): process error: "
-                    f"{e}\n{traceback.format_exc()}"
+                    f"{self._name} (_run): process error: {e}\n"
+                    f"{traceback.format_exc()}"
                 )
                 # Exit the thread with a non-zero status
                 sys.exit(1)
@@ -445,8 +445,8 @@ class QueueThreadSubscriber(Subscriber):
             )
         except Exception as e:
             self._logger.error(
-                f"{self._name} (update): process error: "
-                f"{e}\n{traceback.format_exc()}"
+                f"{self._name} (update): process error: {e}\n"
+                f"{traceback.format_exc()}"
             )
 
     def start(self) -> None:
@@ -499,8 +499,8 @@ class QueueThreadSubscriber(Subscriber):
                 continue
             except Exception as e:
                 self._logger.error(
-                    f"{self._name} (_run): process error: "
-                    f"{e}\n{traceback.format_exc()}"
+                    f"{self._name} (_run): process error: {e}\n"
+                    f"{traceback.format_exc()}"
                 )
                 # Exit the thread with a non-zero status
                 sys.exit(1)
@@ -602,8 +602,8 @@ class QueueProcessSubscriber(Subscriber):
             )
         except Exception as e:
             self._logger.error(
-                f"{self._name} (update): process error: "
-                f"{e}\n{traceback.format_exc()}"
+                f"{self._name} (update): process error: {e}\n"
+                f"{traceback.format_exc()}"
             )
 
     def start(self) -> None:
@@ -658,8 +658,8 @@ class QueueProcessSubscriber(Subscriber):
                 continue
             except Exception as e:
                 self._logger.error(
-                    f"{self._name} (_run): fatal error: "
-                    f"{e}\n{traceback.format_exc()}"
+                    f"{self._name} (_run): fatal error: {e}\n"
+                    f"{traceback.format_exc()}"
                 )
 
     def __repr__(self) -> str:

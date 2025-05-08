@@ -4,6 +4,7 @@ from . import consumer
 from . import controller
 from . import dispatcher
 from . import logger
+from . import plotter
 from . import processor
 from . import publisher
 from . import strategy
@@ -17,6 +18,7 @@ __all__ = [
     "controller",
     "dispatcher",
     "logger",
+    "plotter",
     "processor",
     "publisher",
     "strategy",
