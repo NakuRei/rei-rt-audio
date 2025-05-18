@@ -18,6 +18,7 @@ documentation for details.
    rei_rt_audio.consumer
    rei_rt_audio.controller
    rei_rt_audio.dispatcher
+   rei_rt_audio.preprocessor
    rei_rt_audio.processor
    rei_rt_audio.publisher
    rei_rt_audio.strategy

@@ -1,18 +1,16 @@
 import abc
-from typing import Any, Callable, Final, Protocol
+from typing import Any, Final, Protocol
 
 import numpy as np
 import numpy.typing as npt
 
 from . import consumer as my_consumer
+from . import preprocessor as my_preprocessor
 from . import logger as my_logger
 
 
 class FrameHandlingStrategyProtocol(Protocol):
     def handle(self, frame: npt.NDArray[Any]) -> None: ...
-
-
-PreprocessType = Callable[[npt.NDArray[Any]], npt.NDArray[Any] | None]
 
 
 class FrameHandlingStrategy(abc.ABC):
@@ -27,7 +25,7 @@ class FrameHandlingStrategy(abc.ABC):
         self,
         consumer: my_consumer.ConsumerProtocol,
         logger: my_logger.LoggerProtocol | None = None,
-        preprocess_for_frame: PreprocessType | None = None,
+        preprocess_for_frame: my_preprocessor.PreprocessType | None = None,
     ) -> None:
         self._consumer: Final = consumer
 
@@ -72,7 +70,7 @@ class SlidingBufferProcessingStrategy(FrameHandlingStrategy):
         n_buffer_samples: int,
         consumer: my_consumer.ConsumerProtocol,
         logger: my_logger.LoggerProtocol | None = None,
-        preprocess_for_frame: PreprocessType | None = None,
+        preprocess_for_frame: my_preprocessor.PreprocessType | None = None,
     ):
         super().__init__(
             consumer=consumer,
@@ -166,7 +164,7 @@ class AccumulatingBufferProcessingStrategy(FrameHandlingStrategy):
         n_buffer_samples: int,
         consumer: my_consumer.ConsumerProtocol,
         logger: my_logger.LoggerProtocol | None = None,
-        preprocess_for_frame: PreprocessType | None = None,
+        preprocess_for_frame: my_preprocessor.PreprocessType | None = None,
     ):
         super().__init__(
             consumer=consumer,
