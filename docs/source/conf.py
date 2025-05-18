@@ -23,6 +23,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.todo",
 ]
 autosummary_generate = True
 autodoc_default_options = {
