@@ -56,7 +56,7 @@ coverage lcov -o lcov.info
 ドキュメント生成に必要なパッケージは別途`requirements_docs.txt`に書いている。ローカルでドキュメントを生成する場合はインストールする。
 
 ```sh
-pip install -r requirements_docstxt
+pip install -r requirements_docs.txt
 ```
 
 Windowsの場合、ドキュメントは下記コマンドで生成できる。
