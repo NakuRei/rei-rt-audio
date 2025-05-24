@@ -1,6 +1,6 @@
 import os
 import tkinter as tk
-from typing import Any
+from typing import Any, Final, Sequence
 
 import numpy.typing as npt
 
@@ -11,44 +11,69 @@ import sounddevice as sd  # noqa:E402
 import rei_rt_audio  # noqa:E402
 
 
-class GuiApp(rei_rt_audio.callback.InOutStreamCallbackHandler):
+class AudioSystemFacade(rei_rt_audio.callback.InOutStreamCallbackHandler):
     def __init__(
         self,
-        dispatcher: rei_rt_audio.dispatcher.InOutStreamDispatcher,
+        process_seconds: float,
+        sample_rate: int,
+        blocksize: int,
         logger: rei_rt_audio.logger.Logger,
     ) -> None:
         super().__init__(logger=logger)
-        self._dispatcher = dispatcher
+        self._subscribers = [
+            rei_rt_audio.subscriber.QueueThreadSubscriber(
+                strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
+                    consumer=rei_rt_audio.plotter.RmsDbfsPlotter(
+                        max_points=256,
+                        channel_numbers=[1, 2],
+                        logger=logger,
+                    ),
+                    logger=logger,
+                ),
+                queue_max_size=blocksize * 2,
+                logger=logger,
+                name="For RMS Plot Thread",
+            ),
+            rei_rt_audio.subscriber.QueueThreadSubscriber(
+                strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
+                    consumer=rei_rt_audio.plotter.WaveformPlotter(
+                        max_points=int(sample_rate * process_seconds),
+                        channel_numbers=[1, 2],
+                        logger=logger,
+                    ),
+                    logger=logger,
+                ),
+                queue_max_size=blocksize * 2,
+                logger=logger,
+                name="For Waveform Plot Thread",
+            ),
+        ]
+        publisher = rei_rt_audio.publisher.FramePublisher(
+            logger=logger,
+            subscribers=self._subscribers,
+        )
+        self._dispatcher = rei_rt_audio.dispatcher.InOutStreamDispatcher(
+            publishers=[publisher],
+            logger=logger,
+        )
 
+        # Processors
         self._gain_processor = rei_rt_audio.processor.GainDbProcessor(
             gain_db=0.0,
             logger=self._logger,
         )
 
-    def _build_gui(self) -> None:
-        self._root = tk.Tk()
-        self._root.title("Silent Threshold Controller")
+    @property
+    def subscribers(self) -> Sequence[rei_rt_audio.subscriber.Subscriber]:
+        return self._subscribers
 
-        self._gain_db_slider = tk.Scale(
-            self._root,
-            from_=-100,
-            to=12,
-            resolution=1,
-            orient="horizontal",
-            label="Silence Threshold (dB)",
-            command=self._update_gain_db,
-            length=300,
-        )
-        self._gain_db_slider.set(self._gain_processor.gain_db)  # type: ignore
-        self._gain_db_slider.pack(padx=10, pady=10)
+    @property
+    def gain_db(self) -> float:
+        return self._gain_processor.gain_db
 
-    def _update_gain_db(self, value: str) -> None:
-        try:
-            gain_db = float(value)
-            self._gain_processor.gain_db = gain_db
-            self._logger.info(f"Gain updated to {gain_db} dB")
-        except ValueError:
-            self._logger.error(f"Invalid gain value: {value}")
+    @gain_db.setter
+    def gain_db(self, value: float) -> None:
+        self._gain_processor.gain_db = value
 
     def callback(
         self,
@@ -66,6 +91,7 @@ class GuiApp(rei_rt_audio.callback.InOutStreamCallbackHandler):
                     time,
                 )
             )
+
         self._gain_processor.process(
             in_data=in_data,
             out_data=out_data,
@@ -73,6 +99,52 @@ class GuiApp(rei_rt_audio.callback.InOutStreamCallbackHandler):
         )
 
         self._dispatcher.consume(data=out_data)
+
+    def start(self) -> None:
+        for subscriber in self._subscribers:
+            subscriber.start()
+
+    def stop(self) -> None:
+        for subscriber in self._subscribers:
+            try:
+                subscriber.stop()
+            except Exception as e:
+                self._logger.error(f"Error stopping subscriber: {e}")
+
+
+class GuiApp:
+    def __init__(
+        self,
+        audio_system_facade: AudioSystemFacade,
+        logger: rei_rt_audio.logger.Logger,
+    ) -> None:
+        self._logger: Final = logger
+        self._audio_system_facade: Final = audio_system_facade
+
+    def _build_gui(self) -> None:
+        self._root = tk.Tk()
+        self._root.title("Silent Threshold Controller")
+
+        self._gain_db_slider = tk.Scale(
+            self._root,
+            from_=-100,
+            to=12,
+            resolution=1,
+            orient="horizontal",
+            label="Silence Threshold (dB)",
+            command=self._update_gain_db,
+            length=300,
+        )
+        self._gain_db_slider.set(self._audio_system_facade.gain_db)
+        self._gain_db_slider.pack(padx=10, pady=10)
+
+    def _update_gain_db(self, value: str) -> None:
+        try:
+            gain_db = float(value)
+            self._audio_system_facade.gain_db = gain_db
+            self._logger.info(f"Gain updated to {gain_db} dB")
+        except ValueError:
+            self._logger.error(f"Invalid gain value: {value}")
 
     def run_gui(self):
         try:
@@ -99,69 +171,19 @@ if __name__ == "__main__":
     process_seconds = 1.5
 
     logger = rei_rt_audio.logger.PrintLogger(rei_rt_audio.logger.LogLevel.INFO)
-    subscribers = [
-        rei_rt_audio.subscriber.QueueThreadSubscriber(
-            strategy=rei_rt_audio.strategy.AccumulatingBufferProcessingStrategy(
-                n_buffer_samples=int(device_sample_rate * process_seconds),
-                consumer=rei_rt_audio.consumer.MaxAmpPrinter(logger=logger),
-                logger=logger,
-            ),
-            queue_max_size=device_blocksize * 2,
-            logger=logger,
-            name="For Max Amp Thread",
-        ),
-        rei_rt_audio.subscriber.QueueProcessSubscriber(
-            strategy=rei_rt_audio.strategy.AccumulatingBufferProcessingStrategy(
-                n_buffer_samples=int(device_sample_rate * process_seconds),
-                consumer=rei_rt_audio.consumer.RmsPrinter(logger=logger),
-                logger=logger,
-            ),
-            queue_max_size=device_blocksize * 2,
-            logger=logger,
-            name="For RMS Process",
-        ),
-        rei_rt_audio.subscriber.QueueThreadSubscriber(
-            strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
-                consumer=rei_rt_audio.plotter.RmsDbfsPlotter(
-                    max_points=256,
-                    channel_numbers=[1, 2],
-                    logger=logger,
-                ),
-                logger=logger,
-            ),
-            queue_max_size=device_blocksize * 2,
-            logger=logger,
-            name="For RMS Plot Thread",
-        ),
-        rei_rt_audio.subscriber.QueueThreadSubscriber(
-            strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
-                consumer=rei_rt_audio.plotter.WaveformPlotter(
-                    max_points=int(device_sample_rate * process_seconds),
-                    channel_numbers=[1, 2],
-                    logger=logger,
-                ),
-                logger=logger,
-            ),
-            queue_max_size=device_blocksize * 2,
-            logger=logger,
-            name="For Waveform Plot Thread",
-        ),
-    ]
-    publisher = rei_rt_audio.publisher.FramePublisher(
-        logger=logger,
-        subscribers=subscribers,
-    )
-    dispatcher = rei_rt_audio.dispatcher.InOutStreamDispatcher(
-        publishers=[publisher],
+    audio_system_facade = AudioSystemFacade(
+        process_seconds=process_seconds,
+        sample_rate=device_sample_rate,
+        blocksize=device_blocksize,
         logger=logger,
     )
-
-    app = GuiApp(logger=logger, dispatcher=dispatcher)
+    app = GuiApp(
+        audio_system_facade=audio_system_facade,
+        logger=logger,
+    )
 
     try:
-        for subscriber in subscribers:
-            subscriber.start()
-
+        audio_system_facade.start()
         with sd.Stream(
             device=(in_device, out_device),
             channels=device_channels,
@@ -169,7 +191,7 @@ if __name__ == "__main__":
             blocksize=device_blocksize,
             dtype=device_dtype,
             latency=device_latency,
-            callback=app.callback,
+            callback=audio_system_facade.callback,
         ) as stream:
             print("Stream started.")
             print("Stream signal type:", stream.dtype)  # type: ignore
@@ -187,11 +209,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
+        audio_system_facade.stop()
         print("Stream stopped.")
-        for subscriber in subscribers:
-            try:
-                subscriber.stop()
-            except Exception as e:
-                print(f"Error stopping subscriber: {e}")
 
     print("Finished.")
