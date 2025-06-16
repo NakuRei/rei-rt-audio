@@ -45,7 +45,16 @@ class Subscriber(abc.ABC):
         self._strategy: Final = strategy
 
         if logger is None:
-            logger = my_logger.PrintLogger()
+            if hasattr(strategy, "logger"):
+                candidate_logger = getattr(strategy, "logger")
+                if isinstance(candidate_logger, my_logger.LoggerProtocol):
+                    logger = candidate_logger
+                else:
+                    raise TypeError(
+                        "strategy.logger does not implement LoggerProtocol"
+                    )
+            else:
+                logger = my_logger.PrintLogger()
         self._logger: Final = logger
 
         if name is None:

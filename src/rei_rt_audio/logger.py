@@ -5,9 +5,10 @@ import multiprocessing
 import os
 import traceback
 import threading
-from typing import Any, Final, Protocol, Sequence
+from typing import Any, Final, Protocol, Sequence, runtime_checkable
 
 
+@runtime_checkable
 class LoggerProtocol(Protocol):
     """
     A protocol that defines the methods for a logger.

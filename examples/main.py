@@ -20,18 +20,18 @@ class AudioSystemFacade(rei_rt_audio.callback.InOutStreamCallbackHandler):
         logger: rei_rt_audio.logger.Logger,
     ) -> None:
         super().__init__(logger=logger)
+
+        # Dispatcher
         self._subscribers = [
             rei_rt_audio.subscriber.QueueThreadSubscriber(
                 strategy=rei_rt_audio.strategy.FrameProcessingStrategy(
                     consumer=rei_rt_audio.plotter.RmsDbfsPlotter(
                         max_points=256,
                         channel_numbers=[1, 2],
-                        logger=logger,
+                        logger=self._logger,
                     ),
-                    logger=logger,
                 ),
                 queue_max_size=blocksize * 2,
-                logger=logger,
                 name="For RMS Plot Thread",
             ),
             rei_rt_audio.subscriber.QueueThreadSubscriber(
@@ -39,22 +39,20 @@ class AudioSystemFacade(rei_rt_audio.callback.InOutStreamCallbackHandler):
                     consumer=rei_rt_audio.plotter.WaveformPlotter(
                         max_points=int(sample_rate * process_seconds),
                         channel_numbers=[1, 2],
-                        logger=logger,
+                        logger=self._logger,
                     ),
-                    logger=logger,
                 ),
                 queue_max_size=blocksize * 2,
-                logger=logger,
                 name="For Waveform Plot Thread",
             ),
         ]
         publisher = rei_rt_audio.publisher.FramePublisher(
-            logger=logger,
+            logger=self._logger,
             subscribers=self._subscribers,
         )
         self._dispatcher = rei_rt_audio.dispatcher.InOutStreamDispatcher(
             publishers=[publisher],
-            logger=logger,
+            logger=self._logger,
         )
 
         # Processors

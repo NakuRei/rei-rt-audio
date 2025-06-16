@@ -30,7 +30,16 @@ class FrameHandlingStrategy(abc.ABC):
         self._consumer: Final = consumer
 
         if logger is None:
-            logger = my_logger.PrintLogger()
+            if hasattr(consumer, "logger"):
+                candidate_logger = getattr(consumer, "logger")
+                if isinstance(candidate_logger, my_logger.LoggerProtocol):
+                    logger = candidate_logger
+                else:
+                    raise TypeError(
+                        "consumer.logger does not implement LoggerProtocol"
+                    )
+            else:
+                logger = my_logger.PrintLogger()
         self._logger: Final = logger
 
         if preprocess_for_frame is None:
